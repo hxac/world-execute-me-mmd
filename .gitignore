@@ -20,6 +20,7 @@ Thumbs.db
 .render-chrome/
 .render-chrome.pid
 render/
+record/
 scratch-frame.jpg
 *.mp4
 *.webm
