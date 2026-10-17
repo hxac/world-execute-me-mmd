@@ -3,12 +3,25 @@ dist/
 .vite/
 shots/
 .analysis.raw
-.chrome-*/
-.chrome-*.pid
 .npm-cache/
 *.log
 .DS_Store
 Thumbs.db
 .env
 .env.*
-!.env.example
+
+# Only the compressed MP3 is published.
+*.flac
+*.m4a
+
+# Local render workspace / capture artifacts.
+.chrome-*/
+.chrome-*.pid
+.render-chrome/
+.render-chrome.pid
+render/
+scratch-frame.jpg
+*.mp4
+*.webm
+*.mov
+*.mkv
