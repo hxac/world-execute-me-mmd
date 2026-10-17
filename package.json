@@ -3,18 +3,21 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "description": "A character-free 2D motion picture for Mili — world.execute(me);",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host 127.0.0.1",
-    "prepare:data": "node scripts/prepare-data.mjs"
-  },
-  "dependencies": {
-    "three": "0.160.0"
+    "preview": "vite preview",
+    "preview:static": "node scripts/serve-dist.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/three": "0.160.0",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.10"
+    "typescript": "^5.7.2",
+    "vite": "^7.1.0"
+  },
+  "dependencies": {
+    "@fontsource/anton": "^5.2.6",
+    "@fontsource/ibm-plex-mono": "^5.2.6",
+    "@fontsource/instrument-serif": "^5.2.6"
   }
 }
