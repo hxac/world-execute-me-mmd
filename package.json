@@ -4,6 +4,12 @@
   "version": "1.0.0",
   "type": "module",
   "description": "A character-free 2D motion picture for Mili — world.execute(me);",
+  "license": "MIT",
+  "homepage": "https://hxac.github.io/world-execute-me-mmd/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hxac/world-execute-me-mmd.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
