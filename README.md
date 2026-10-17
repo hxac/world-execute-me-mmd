@@ -8,7 +8,7 @@
 
 **演示页面**：https://hxac.github.io/world-execute-me-mmd/
 
-![Start screen](docs/preview-start.jpg)
+![开始界面](docs/preview-start.jpg)
 
 ```bash
 npm install
@@ -17,4 +17,12 @@ npm run dev
 
 ---
 
-源代码与视觉设计采用 [MIT License](LICENSE)。歌曲、录音和歌词归 **Mili** 及相应权利方所有，不属于 MIT 授权范围，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+## 许可协议
+
+本项目原创的源代码、页面结构、交互逻辑和生成视觉设计采用 [MIT 许可证](LICENSE)。
+
+- [完整中文许可协议](LICENSE)
+- [第三方内容声明](THIRD_PARTY_NOTICES.md)
+- [第三方字体许可说明](public/licenses/README.md)
+
+歌曲、录音和歌词归 **Mili** 及相应权利方所有，不属于 MIT 许可证的授权范围。本项目是非官方、非商业粉丝作品，与 Mili 及相应权利方不存在隶属、授权或背书关系。
