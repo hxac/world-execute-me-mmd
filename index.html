@@ -1,0 +1,299 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#030506" />
+    <meta
+      name="description"
+      content="world.execute(me); — a real-time TypeScript / Three.js MMD visualizer for Mili's song, with synchronized lyrics and a coded stage."
+    />
+    <title>world.execute(me); — MMD Simulation</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23030506'/%3E%3Cpath d='M16 16h9v32h-9zm14 0h18v7H30zm0 13h14v6H30zm0 12h18v7H30z' fill='%2363ffb6'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="stage-canvas" aria-label="实时 MMD 舞台"></canvas>
+
+      <div class="screen-vignette" aria-hidden="true"></div>
+      <div class="screen-grain" id="grain" aria-hidden="true"></div>
+      <div class="screen-scanlines" aria-hidden="true"></div>
+      <div class="screen-frame" aria-hidden="true">
+        <span class="frame-corner frame-corner--tl"></span>
+        <span class="frame-corner frame-corner--tr"></span>
+        <span class="frame-corner frame-corner--bl"></span>
+        <span class="frame-corner frame-corner--br"></span>
+      </div>
+
+      <div class="scene-fallback" id="sceneFallback" hidden>
+        <span>VISUAL CORE OFFLINE</span>
+        <p>WebGL 或 MMD 资源无法载入，已切换至纯界面模式。</p>
+      </div>
+
+      <main class="experience" id="experience" aria-label="world.execute(me) 音乐可视化">
+        <header class="topbar">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true">∎</span>
+            <div class="brand-copy">
+              <strong>world.execute(me);</strong>
+              <span>MILI / MMD FAN VISUALIZER</span>
+            </div>
+          </div>
+
+          <div class="system-state">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="statusText">SYS.STANDBY</span>
+            <span class="system-divider" aria-hidden="true"></span>
+            <span id="systemClock">00:00</span>
+            <div class="mini-meter" id="miniMeter" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <button class="inline-info" id="infoBtnMobile" type="button" aria-label="查看制作信息">i</button>
+          </div>
+
+          <nav class="top-actions" aria-label="页面操作">
+            <button class="text-button" id="infoBtn" type="button">CREDITS <span>↗</span></button>
+          </nav>
+        </header>
+
+        <aside class="phase-panel" aria-live="polite">
+          <div class="phase-kicker">
+            <span>PHASE</span>
+            <span id="phaseNo">00</span>
+            <span class="phase-slash">/</span>
+            <span id="phaseClock">00:00</span>
+          </div>
+          <h2 id="phaseTitle">BOOT_SEQUENCE</h2>
+          <p class="phase-zh" id="phaseZh">冷启动</p>
+          <div class="phase-rule">
+            <span id="phaseProgress"></span>
+          </div>
+        </aside>
+
+        <aside class="trace-panel" aria-label="系统追踪">
+          <div class="trace-head">
+            <span>TRACE.LOG</span>
+            <span>UID 0x1A4</span>
+          </div>
+          <ol id="traceList" class="trace-list">
+            <li>&gt; init.visual_core()</li>
+            <li>&gt; mount(mmd.skeleton)</li>
+            <li>&gt; await(input)</li>
+            <li class="trace-caret">&gt; <span class="caret"></span></li>
+          </ol>
+          <div class="signal-readout">
+            <div class="signal-label"><span>SIGNAL</span><span id="signalValue">00.0</span></div>
+            <div class="signal-bars" id="signalBars" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+          </div>
+        </aside>
+
+        <div class="stamp-layer" id="stampLayer" aria-hidden="true">
+          <span class="stamp-text" id="stampText" data-text=""></span>
+          <span class="stamp-zh" id="stampZh"></span>
+        </div>
+
+        <section class="lyric-dock" id="lyricDock" aria-live="polite" aria-atomic="true">
+          <div class="lyric-meta">
+            <span class="lyric-tag"><span class="lyric-tag-dot"></span>LYRIC_FEED</span>
+            <span id="cueCounter">CUE // --- / 129</span>
+          </div>
+          <p class="lyric-en" id="lyricEn">switch on the power line</p>
+          <p class="lyric-zh" id="lyricZh">接通电源</p>
+          <div class="lyric-progress" aria-hidden="true"><span id="lyricProgress"></span></div>
+        </section>
+
+        <footer class="transport" aria-label="播放控制">
+          <div class="transport-main">
+            <button class="round-button play-button" id="playBtn" type="button" aria-label="播放">
+              <svg class="icon icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z" /></svg>
+              <svg class="icon icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zm6.5 0H17v14h-3.5z" /></svg>
+            </button>
+            <span class="timecode" id="timeCurrent">00:00</span>
+            <div class="timeline" id="timeline" role="slider" tabindex="0" aria-label="播放进度" aria-valuemin="0" aria-valuemax="211" aria-valuenow="0">
+              <div class="waveform waveform--base" id="waveformBase" aria-hidden="true"></div>
+              <div class="waveform waveform--active" id="waveformActive" aria-hidden="true"></div>
+              <div class="timeline-chapters" id="timelineChapters" aria-hidden="true"></div>
+              <div class="timeline-head" id="timelineHead" aria-hidden="true"></div>
+            </div>
+            <span class="timecode timecode--total" id="timeTotal">03:32</span>
+          </div>
+
+          <div class="transport-tools">
+            <button class="text-button tool-button" id="restartBtn" type="button" aria-label="重新开始">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8.5A8 8 0 1 1 4 14h2a6 6 0 1 0 .7-3.8L10 13H3V6z" /></svg>
+              <span>REWIND</span>
+            </button>
+            <button class="text-button tool-button" id="camBtn" type="button" aria-pressed="false" aria-label="切换自由镜头">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4l1.5-2h5L16 7h4v12H4zm8 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" /></svg>
+              <span>AUTO CAM</span>
+            </button>
+            <button class="text-button tool-button" id="muteBtn" type="button" aria-pressed="false" aria-label="静音">
+              <svg class="icon icon-sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zm12.5-1.5A5.5 5.5 0 0 1 16.5 16l1.2 1.5A7.5 7.5 0 0 0 17.7 6z" /></svg>
+              <svg class="icon icon-sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zm12.2.1 1.4 1.4L15.9 13l1.7 1.7-1.4 1.4L14.5 14l-1.7 1.7-1.4-1.4 1.7-1.7-1.7-1.7 1.4-1.4 1.7 1.7z" /></svg>
+              <span>SOUND ON</span>
+            </button>
+            <button class="text-button tool-button tool-button--mobile-hide" id="fsBtn" type="button" aria-label="全屏">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v2H6v5H4zm9 0h7v7h-2V6h-5zM4 13h2v5h5v2H4zm14 0h2v7h-7v-2h5z" /></svg>
+              <span>FULL</span>
+            </button>
+          </div>
+        </footer>
+
+        <div class="key-hints" aria-hidden="true">
+          <span><kbd>SPACE</kbd> PLAY / PAUSE</span>
+          <span><kbd>C</kbd> CAMERA</span>
+          <span><kbd>F</kbd> FULLSCREEN</span>
+        </div>
+      </main>
+
+      <section class="intro" id="intro" aria-label="进入可视化">
+        <div class="intro-noise" aria-hidden="true"></div>
+        <div class="intro-layout">
+          <div class="intro-top">
+            <div class="intro-terminal">
+              <span class="terminal-prompt">root@simulation:~$</span>
+              <span id="bootLine">open world.execute(me).sim</span>
+              <span class="terminal-caret" aria-hidden="true"></span>
+            </div>
+            <div class="intro-index">
+              <span>EXPERIMENT <b>No. 004</b></span>
+              <span>MMD / WEBGL / 2026</span>
+            </div>
+          </div>
+
+          <div class="intro-center">
+            <div class="intro-eyebrow">
+              <span class="pulse-dot" aria-hidden="true"></span>
+              A REAL-TIME TYPED-MEDIA SIMULATION
+            </div>
+            <h1 class="hero-title">
+              <span class="hero-line hero-line--top">world<span class="hero-dot">.</span></span>
+              <span class="hero-line hero-line--bottom">execute<span class="hero-paren">(<em>me</em>)</span><span class="hero-semi">;</span></span>
+            </h1>
+            <div class="intro-subline">
+              <span>MILI</span>
+              <span class="intro-subline-sep">/</span>
+              <span>世界，执行我</span>
+              <span class="intro-subline-sep">/</span>
+              <span>3:31</span>
+            </div>
+            <p class="intro-quote">
+              If I can make you happy,<br />
+              <span>I will run the execution.</span>
+            </p>
+          </div>
+
+          <div class="intro-bottom">
+            <div class="intro-actions">
+              <button class="run-button" id="startBtn" type="button" disabled>
+                <span class="run-button-index">01</span>
+                <span class="run-button-label">
+                  <span class="run-button-title" id="startLabel">LOADING SIMULATION</span>
+                  <span class="run-button-note" id="startNote">MMD skeleton / dance data / audio</span>
+                </span>
+                <span class="run-button-arrow" aria-hidden="true">↗</span>
+              </button>
+              <p class="intro-hint">HEADPHONES RECOMMENDED <span>建议佩戴耳机</span></p>
+            </div>
+
+            <div class="load-panel" id="loadPanel">
+              <div class="load-row">
+                <span id="loadLabel">BOOTING VISUAL CORE</span>
+                <span id="loadPercent">00%</span>
+              </div>
+              <div class="load-track"><span id="loadBar"></span></div>
+              <p class="load-detail" id="loadDetail">Three.js // WebAudio // MMD</p>
+            </div>
+
+            <div class="intro-legal">
+              <button class="intro-credit-button" id="introCreditsBtn" type="button">CREDITS / LICENSES ↗</button>
+              <span>FAN-MADE / NON-COMMERCIAL</span>
+              <span>HATSUNE MIKU © CRYPTON FUTURE MEDIA</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ending" id="ending" aria-label="播放结束" aria-hidden="true">
+        <div class="ending-inner">
+          <div class="ending-kicker"><span class="status-dot"></span> PROCESS TERMINATED</div>
+          <h2>exit_code = <em>LOVE</em>;</h2>
+          <p>
+            你自由了。我仍被困在这里。<br />
+            <span>but love is the only infinite loop.</span>
+          </p>
+          <div class="ending-stats">
+            <span>RUN TIME <b>03:31</b></span>
+            <span>CUES <b>129</b></span>
+            <span>LOOP <b>∞</b></span>
+          </div>
+          <button class="run-button run-button--small" id="replayBtn" type="button">
+            <span class="run-button-index">↺</span>
+            <span class="run-button-label">
+              <span class="run-button-title">RUN AGAIN</span>
+              <span class="run-button-note">execute(me) // from 00:00</span>
+            </span>
+            <span class="run-button-arrow" aria-hidden="true">↗</span>
+          </button>
+          <p class="ending-credit">MILI — world.execute(me); <span>/</span> MMD FAN VISUALIZER</p>
+        </div>
+      </section>
+
+      <dialog class="credits-dialog" id="creditsDialog">
+        <div class="credits-head">
+          <span>ABOUT.TXT</span>
+          <button class="text-button" id="closeCredits" type="button" aria-label="关闭">CLOSE ×</button>
+        </div>
+        <div class="credits-body">
+          <p class="credits-title">world.execute(me);</p>
+          <p class="credits-sub">A fan-made, real-time MMD / WebGL visualizer built with TypeScript and Three.js.</p>
+
+          <div class="credits-grid">
+            <div>
+              <span class="credits-label">SONG</span>
+              <p>Mili — world.execute(me);<br /><span>Audio loaded from the local project files.</span></p>
+            </div>
+            <div>
+              <span class="credits-label">MMD MODEL</span>
+              <p>Hatsune Miku sample bundled with MMD.<br /><span>Via three.js r160 examples. Character © Crypton Future Media, INC.</span></p>
+            </div>
+            <div>
+              <span class="credits-label">MOTION</span>
+              <p>wavefile_v2.vmd<br /><span>Dance data: sm13147122 (nicovideo.jp).</span></p>
+            </div>
+            <div>
+              <span class="credits-label">VISUAL SYSTEM</span>
+              <p>Three.js / MMDLoader / custom GLSL.<br /><span>No pre-rendered video. Everything runs live.</span></p>
+            </div>
+          </div>
+
+          <div class="credits-note">
+            <span>LICENSE NOTE</span>
+            <p>
+              MMD models and motions are not covered by three.js's MIT license. This local, non-commercial fan work follows the
+              Crypton character usage guidelines and the original MMD asset readmes. Do not redistribute the bundled model,
+              motion, or song commercially.
+            </p>
+          </div>
+
+          <div class="credits-shortcuts">
+            <span><kbd>SPACE</kbd> PLAY / PAUSE</span>
+            <span><kbd>←</kbd><kbd>→</kbd> SEEK 5S</span>
+            <span><kbd>C</kbd> FREE CAMERA</span>
+            <span><kbd>M</kbd> MUTE</span>
+            <span><kbd>F</kbd> FULLSCREEN</span>
+          </div>
+        </div>
+      </dialog>
+    </div>
+
+    <audio id="song" src="./audio/world-execute-me.m4a" preload="auto"></audio>
+    <noscript>
+      <div class="noscript">This visualizer needs JavaScript and WebGL. / 请启用 JavaScript 与 WebGL 后重试。</div>
+    </noscript>
+    <script src="./vendor/ammo.wasm.js"></script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
