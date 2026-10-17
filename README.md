@@ -6,6 +6,8 @@
 
 完成所有构建。
 
+**当前 DSH 版本**：DeepSeek Harness `0.2.1-rc.2`（桌面配置 / Web 图形界面，nightly 更新通道）。
+
 **演示页面**：https://hxac.github.io/world-execute-me-mmd/
 
 ![开始界面](docs/preview-start.jpg)
